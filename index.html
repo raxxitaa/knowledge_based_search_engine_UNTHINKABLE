@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base Search Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.9);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body.dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ecf0f1;
+        }
+        body.dark .card {
+            background: rgba(44, 62, 80, 0.9);
+            color: #ecf0f1;
+        }
+        body.dark .form-control {
+            background: #34495e;
+            border-color: #7f8c8d;
+            color: #ecf0f1;
+        }
+        body.dark .form-control:focus {
+            border-color: #3498db;
+        }
+        body.dark .alert {
+            background: rgba(52, 73, 94, 0.9);
+            color: #ecf0f1;
+        }
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+        .history-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+        }
+        body.dark .history-item {
+            background: rgba(44, 62, 80, 0.5);
+        }
+        @media (max-width: 768px) {
+            .col-md-6 {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <button class="btn btn-outline-light toggle-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-6">
+                <div class="card fade-in">
+                    <div class="card-body p-5">
+                        <h1 class="card-title text-center mb-4">
+                            <i class="fas fa-brain text-primary me-2"></i>
+                            Knowledge Base Search Engine
+                        </h1>
+                        <p class="lead text-center mb-4">Welcome! Upload documents to build your knowledge base, then ask questions to get AI-synthesized answers.</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-upload text-success me-2"></i>
+                                            Upload Documents
+                                        </h5>
+                                        <form id="uploadForm" enctype="multipart/form-data">
+                                            <div class="mb-3">
+                                                <input type="file" class="form-control" id="files" name="files" multiple accept=".pdf,.txt,.docx" required aria-label="Document files" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Select PDF, TXT, or DOCX files to upload">
+                                                <div class="form-text">Supported formats: PDF, TXT, DOCX (e.g., research papers, notes)</div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100" id="uploadBtn" aria-label="Upload files" data-bs-toggle="tooltip" title="Upload and process the selected files">
+                                                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Files
+                                            </button>
+                                        </form>
+                                        <div class="progress mt-3 d-none" id="uploadProgress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <div id="uploadStatus" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-search text-info me-2"></i>
+                                            Query Knowledge Base
+                                        </h5>
+                                        <div class="mb-3">
+                                            <input type="text" class="form-control" id="query" placeholder="e.g., What is machine learning?" required aria-label="Search query" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Enter your question about the uploaded documents">
+                                        </div>
+                                        <button onclick="query()" class="btn btn-primary w-100" id="queryBtn" aria-label="Submit query" data-bs-toggle="tooltip" title="Search the knowledge base for an answer">
+                                            <i class="fas fa-search me-2"></i>Search
+                                        </button>
+                                        <div class="progress mt-3 d-none" id="queryProgress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <div id="answer" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title mt-4">
+                            <i class="fas fa-history text-secondary me-2"></i>
+                            Query History
+                        </h5>
+                        <div id="history"></div>
+                        <button class="btn btn-outline-secondary btn-sm mt-2" onclick="clearHistory()" aria-label="Clear query history">
+                            <i class="fas fa-trash me-1"></i>Clear History
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showAlert(element, type, message) {
+            element.className = `alert alert-${type} fade-in`;
+            element.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}`;
+        }
+
+        function showProgress(progressBar, show) {
+            progressBar.parentElement.classList.toggle('d-none', !show);
+            if (show) {
+                progressBar.style.width = '0%';
+                setTimeout(() => progressBar.style.width = '100%', 100);
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const uploadProgress = document.getElementById('uploadProgress').firstElementChild;
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+            showProgress(uploadProgress, true);
+
+            const formData = new FormData();
+            const files = document.getElementById('files').files;
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                console.log('Upload response status:', response.status);
+                const result = await response.json();
+                console.log('Upload result:', result);
+                if (response.ok) {
+                    showAlert(uploadStatus, 'success', 'Documents uploaded successfully! You can now query the knowledge base.');
+                } else {
+                    showAlert(uploadStatus, 'danger', result.detail || result.message || 'Upload failed. Please check the file formats and try again.');
+                }
+            } catch (error) {
+                console.error('Upload fetch error:', error);
+                showAlert(uploadStatus, 'danger', 'An error occurred during upload.');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload Files';
+                showProgress(uploadProgress, false);
+            }
+        });
+
+        function displayAnswer(fullAnswer) {
+            const answerDiv = document.getElementById('answer');
+            const truncated = fullAnswer.length > 300 ? fullAnswer.substring(0, 300) + '...' : fullAnswer;
+            answerDiv.innerHTML = `
+                <div class="alert alert-info fade-in">
+                    <strong>Answer:</strong> <span id="answerText">${truncated}</span>
+                    ${fullAnswer.length > 300 ? '<button class="btn btn-link p-0 ms-2" onclick="toggleAnswer()">Show More</button>' : ''}
+                </div>
+            `;
+            answerDiv.dataset.fullAnswer = fullAnswer;
+            answerDiv.dataset.isTruncated = fullAnswer.length > 300 ? 'true' : 'false';
+        }
+
+        function toggleAnswer() {
+            const answerDiv = document.getElementById('answer');
+            const answerText = document.getElementById('answerText');
+            const button = answerDiv.querySelector('button');
+            if (answerDiv.dataset.isTruncated === 'true') {
+                answerText.textContent = answerDiv.dataset.fullAnswer;
+                button.textContent = 'Show Less';
+                answerDiv.dataset.isTruncated = 'false';
+            } else {
+                const truncated = answerDiv.dataset.fullAnswer.substring(0, 300) + '...';
+                answerText.textContent = truncated;
+                button.textContent = 'Show More';
+                answerDiv.dataset.isTruncated = 'true';
+            }
+        }
+
+        async function query() {
+            const queryBtn = document.getElementById('queryBtn');
+            const answerDiv = document.getElementById('answer');
+            const queryProgress = document.getElementById('queryProgress').firstElementChild;
+            const queryText = document.getElementById('query').value.trim();
+
+            if (!queryText) {
+                showAlert(answerDiv, 'warning', 'Please enter a query.');
+                return;
+            }
+
+            queryBtn.disabled = true;
+            queryBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+            showProgress(queryProgress, true);
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({query: queryText})
+                });
+                console.log('Query response status:', response.status);
+                const result = await response.json();
+                console.log('Query result:', result);
+                if (response.ok) {
+                    displayAnswer(result.answer);
+                    addToHistory(queryText, result.answer);
+                } else {
+                    showAlert(answerDiv, 'danger', result.detail || result.error || 'Query failed. Please ensure documents are uploaded first.');
+                }
+            } catch (error) {
+                console.error('Query fetch error:', error);
+                showAlert(answerDiv, 'danger', 'An error occurred during search.');
+            } finally {
+                queryBtn.disabled = false;
+                queryBtn.innerHTML = '<i class="fas fa-search me-2"></i>Search';
+                showProgress(queryProgress, false);
+            }
+        }
+
+        function addToHistory(query, answer) {
+            const historyDiv = document.getElementById('history');
+            const item = document.createElement('div');
+            item.className = 'history-item fade-in';
+            const truncatedAnswer = answer.length > 300 ? answer.substring(0, 300) + '...' : answer;
+            item.innerHTML = `<strong>${query}</strong><br>${truncatedAnswer}`;
+            historyDiv.appendChild(item);
+            localStorage.setItem('queryHistory', historyDiv.innerHTML);
+        }
+
+        function clearHistory() {
+            document.getElementById('history').innerHTML = '';
+            localStorage.removeItem('queryHistory');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+        }
+
+        window.onload = function() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark');
+            }
+            const history = localStorage.getItem('queryHistory');
+            if (history) {
+                document.getElementById('history').innerHTML = history;
+            }
+            // Initialize tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        }
+    </script>
+</body>
+</html>
