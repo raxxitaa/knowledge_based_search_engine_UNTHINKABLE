@@ -4,6 +4,12 @@ A **Retrieval-Augmented Generation (RAG)** powered search engine that allows use
 
 ---
 
+## 🔗 Deliverables
+- **GitHub Repository:** [https://github.com/raxxitaa/knowledge_based_search_engine_UNTHINKABLE](https://github.com/raxxitaa/knowledge_based_search_engine_UNTHINKABLE)  
+
+
+---
+
 ## ⚡ Features
 - **Document Upload:** Supports multiple PDF and TXT files.  
 - **Embeddings:** Converts documents into vector representations using OpenAI embeddings.  
@@ -18,4 +24,6 @@ A **Retrieval-Augmented Generation (RAG)** powered search engine that allows use
 1. Ensure **Python 3.11+** is installed.  
 2. Clone the repository:  
    ```bash
-   git clone https://github.com/pavan-parimi/knowledge-base-search-engine.git
+   git clone https://github.com/raxxitaa/knowledge_based_search_engine_UNTHINKABLE.git
+3. Navigate to the project folder:
+cd knowledge_based_search_engine_UNTHINKABLE
